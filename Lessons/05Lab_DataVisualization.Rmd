@@ -93,22 +93,31 @@ Say we want to plot the number of records each month in the Peter/Paul lakes dat
 
 ```{r Plot the number of records by month}
 #What kind of values are months?
-
+class(PeterPaul.chem.nutrients$month)
 
 #List unique values
-
+unique(PeterPaul.chem.nutrients$month)
 
 #Plot how many Lake observations occur each month
+PeterPaul.chem.nutrients %>%
+  ggplot()+
+  geom_bar(aes(x=month))
 
-
-#Convert month to a factor -- with 12 levels, labelled with month names
-
+#Convert month to a factor -- with 12 levels, labelled with month names 
+PeterPaul.chem.nutrients$month <- factor(PeterPaul.chem.nutrients$month, 
+       levels = 1:12,
+       labels = month.abb)
 
 #Try again: Plot how many Lake observations occur each month
-
+PeterPaul.chem.nutrients %>%
+  ggplot()+
+  geom_bar(aes(x=month))
 
 #Alter to include missing months
-
+PeterPaul.chem.nutrients %>%
+  ggplot()+
+  geom_bar(aes(x=month))+
+  scale_x_discrete(drop=F)
 
 #Tidy up the code
 
@@ -192,30 +201,41 @@ my_theme <- theme_base() +
 ```{r useful theme creation template}
 my_theme <- theme_base()  + 
   theme(
-    #line =              element_line(),
-    #rect =              element_rect(),
-    #text =              element_text(),
+    line =              element_line(
+      color = '#CC6633',
+      linewidth = 2,
+      linetype = 'solid'
+    ),
+    rect =              element_rect(
+      fill = 'white',
+      colour = 'black'
+    ),
+    text =              element_text(
+      face = 'plain',
+      colour = 'black',
+      size = '16'
+    ),
     
     # Modified inheritance structure of text element
-    #plot.title =        element_text(),
-    #axis.title.x =      element_blank(),
-    #axis.title.y =      element_blank(),
+    plot.title =        element_text(),
+    axis.title.x =      element_blank(),
+    axis.title.y =      element_blank(),
     #axis.text =         element_text(),
     
     # Modified inheritance structure of line element
-    #axis.ticks =        element_line(),
-    #panel.grid.major =  element_line(),
-    #panel.grid.minor =  element_blank(),
+    axis.ticks =        element_line(),
+    panel.grid.major =  element_line(),
+    panel.grid.minor =  element_blank(),
     
     # Modified inheritance structure of rect element
-    #plot.background =   element_rect(),
-    #panel.background =  element_rect(),
-    #legend.key =        element_rect(),
+    plot.background =   element_rect(),
+    panel.background =  element_rect(),
+    legend.key =        element_rect(),
     
     # Modifiying legend.position
-    #legend.position = 'right',
+    legend.position = 'right',
     
-    #complete = TRUE
+    complete = TRUE
     )
 ```
 
@@ -235,13 +255,27 @@ Exercise: build your own scatterplots of PeterPaul.chem.nutrients
 # Plot surface temperatures by day of  year. 
 # Color your points by year, and facet by lake in two rows.
 # Change the ylab name
-
+PeterPaul.chem.nutrients %>%
+  filter(depth==0) %>%
+  ggplot(aes(x= daynum,
+             y= temperature_C,
+             colour = year4)) +
+  geom_point()+
+  facet_wrap(facets = vars(lakename), nrow = 1,ncol = 2) +
+  ylab("temperature C")
 
 #2. 
 # Plot temperature by date. Color your points by depth.
 # Change the size of your point to 0.5
 # Change the color palette to magma and play with direction (+- 1), which one makes more sense?
 # Change x axis to include marker/labels every 5 years
+PeterPaul.chem.nutrients %>%
+  ggplot(aes(x= sampledate,
+             y= temperature_C,
+             colour = depth)) +
+  geom_point(size=0.5)+
+  scale_color_viridis(option = "magma", direction = -1)+
+ scale_x_date(date_breaks = "5 years", date_labels = "%Y")
 
 
 
@@ -256,7 +290,16 @@ Exercise: Plot relationships between air quality measurements
 # Plot AQI values for ozone by PM2.5, colored by latitude 
 # Make the points 50 % transparent
 # Add a line of best fit for the linear regression of these variables.
-
+EPAair %>%
+  ggplot(aes(x= PM2.5,
+             y= Ozone,
+             colour = mean_Lat),
+  alpha = 0.5) + 
+  geom_point()+
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  )
 
 
 
