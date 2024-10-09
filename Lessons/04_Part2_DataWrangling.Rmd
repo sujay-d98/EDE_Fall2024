@@ -85,7 +85,7 @@ We will work with the new functions from `tidyr`. For gather we will use `pivot_
 
 ```{r gather and spread}
 # Gather nutrient data into one column
-#NTL.nutrient.data.PeterPaul.gathered <- gather(NTL.nutrient.data.PeterPaul.subset, "nutrient", "concentration", tn_ug:po4)
+NTL.nutrient.data.PeterPaul.gathered <- gather(NTL.nutrient.data.PeterPaul.subset, "nutrient", "concentration", tn_ug:po4)
 
 # Gather nutrient data into one column using pivot_longer
 NTL.nutrient.data.PeterPaul.gathered <- pivot_longer(NTL.nutrient.data.PeterPaul.subset,tn_ug:po4, names_to = "nutrient", values_to = "concentration")
@@ -97,7 +97,7 @@ write.csv(NTL.nutrient.data.PeterPaul.gathered, row.names = FALSE,
           file = "./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
 
 # Spread nutrient data into separate columns
-#NTL.nutrient.data.PeterPaul.spread <- spread(NTL.nutrient.data.PeterPaul.gathered, nutrient, concentration)
+NTL.nutrient.data.PeterPaul.spread <- spread(NTL.nutrient.data.PeterPaul.gathered, nutrient, concentration)
 
 # Spread nutrient data into separate columns using pivot_wider
 NTL.nutrient.data.PeterPaul.spread2 <- pivot_wider(NTL.nutrient.data.PeterPaul.gathered, names_from = nutrient, values_from = concentration)
