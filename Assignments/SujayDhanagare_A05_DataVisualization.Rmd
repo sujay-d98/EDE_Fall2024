@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Sujay Dhanagare"
 date: "Fall 2024"
 output: pdf_document
 geometry: margin=2.54cm
@@ -33,7 +33,21 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r initialize project}
 #1 
 
+library(tidyverse)
+library(lubridate)
+library(here)
+library(cowplot)
+
+NTL_LTER_PeterPaul <- read.csv(file = here("./Data/Processed_KEY/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv"), stringsAsFactors = TRUE)
+NIWOT_ridge_litter <- read.csv(file = here("./Data/Processed_KEY/NEON_NIWO_Litter_mass_trap_Processed.csv"), stringsAsFactors = TRUE)
+
 #2 
+
+class(NTL_LTER_PeterPaul$sampledate)
+class(NIWOT_ridge_litter$collectDate)
+
+NTL_LTER_PeterPaul$sampledate <- ymd(NTL_LTER_PeterPaul$sampledate)
+NIWOT_ridge_litter$collectDate <- ymd(NIWOT_ridge_litter$collectDate)
 
 ```
 ## Define your theme
@@ -47,6 +61,81 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 ```{r build plot theme}
 #3
 
+library(ggplot2)
+
+# Define a custom theme
+my_theme <- theme_classic() + 
+  theme(
+    line = element_line(
+      color = '#000080',  # Navy blue for the Ashoka Chakra
+      size = 2,
+      linetype = 'solid'
+    ),
+    rect = element_rect(
+      fill = 'white',  # White background as in the flag's middle band
+      colour = 'black'
+    ),
+    text = element_text(
+      face = 'plain',
+      colour = '#000080',  # Navy blue text
+      size = 16
+    ),
+    
+    # Customize Plot Title
+    plot.title = element_text(
+      face = "bold",
+      size = 20,
+      color = "#FF9933",  # Saffron color for the plot title
+      hjust = 0.5
+    ),
+    
+    # Axis Titles are blank
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    
+    # Customize Axis Ticks
+    axis.ticks = element_line(
+      color = "#138808"  # Green color for the ticks
+    ),
+    
+    # Customize Major Grid Lines
+    panel.grid.major = element_line(
+      color = "#E5E5E5",
+      size = 0.5
+    ),
+    
+    # Remove Minor Grid Lines
+    panel.grid.minor = element_blank(),
+    
+    # Customize Plot Background
+    plot.background = element_rect(
+      fill = "#FFFFFF",  # White background
+      colour = NA
+    ),
+    
+    # Customize Panel Background
+    panel.background = element_rect(
+      fill = "#FFFFFF",
+      colour = NA
+    ),
+    
+    # Customize Legend Key
+    legend.key = element_rect(
+      fill = "#FFFFFF",
+      colour = "#FF9933"  # Saffron border for legend keys
+    ),
+    
+    # Set Legend Position
+    legend.position = "right",
+    
+    # Ensure theme completeness
+    complete = TRUE
+  )
+
+# Set this theme as default
+theme_set(my_theme)
+
+
 ```
 
 ## Create graphs
@@ -57,6 +146,22 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 ```{r plot total P vs PO4}
 #4 
 
+plot1 <- ggplot(NTL_LTER_PeterPaul, aes(x = po4, y = tp_ug, color = lakename)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", se = FALSE) +  # Add linear model lines without confidence intervals
+  scale_color_manual(values = c("Peter Lake" = "#FF9933", "Paul Lake" = "#138808")) +  
+  labs(title = "Total Phosphorus vs. Phosphate in Lakes",
+       x = "Phosphate [po4]",
+       y = "Total Phosphorus [tp_ug]") +
+  theme_classic() +
+  theme(
+    plot.title = element_text(color = "#000080", face = "bold"),
+    text = element_text(color = "#000080")
+  ) +
+  xlim(0.00, 100.00) +  # Limit x-axis to hide extreme values
+  ylim(0, 100)       # Limit y-axis to hide extreme values
+
+print(plot1)
 ```
 
 
@@ -71,11 +176,65 @@ Tips:
 ```{r Create boxplots}
 #5 
 
+NTL_LTER_PeterPaul$month <- factor(NTL_LTER_PeterPaul$month, levels = 1:12, labels = month.name)
+
+NTL_LTER_PeterPaul_finite <- NTL_LTER_PeterPaul %>%
+  filter(
+    is.finite(temperature_C),
+    is.finite(tp_ug),
+    is.finite(tn_ug)
+  )
+
+# Plot 1: Temperature
+plot_temp <- ggplot(NTL_LTER_PeterPaul_finite, aes(x = month, y = temperature_C, fill = lakename)) +
+  geom_boxplot() +
+  labs(y = "Temperature (°C)", x = NULL) +  # Remove x axis label for alignment
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        legend.position = "none")  # Remove legend
+
+print(plot_temp)
+
+# Plot 2: Total Phosphorus (TP)
+plot_tp <- ggplot(NTL_LTER_PeterPaul_finite, aes(x = month, y = tp_ug, fill = lakename)) +
+  geom_boxplot() +
+  labs(y = "Total Phosphorus (µg/L)", x = NULL) +
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        legend.position = "none")
+
+print(plot_tp)
+
+# Plot 3: Total Nitrogen (TN)
+plot_tn <- ggplot(NTL_LTER_PeterPaul_finite, aes(x = month, y = tn_ug, fill = lakename)) +
+  geom_boxplot() +
+  labs(y = "Total Nitrogen (µg/L)", x = "Month") +
+  theme_classic() +
+  theme(axis.title.x = element_blank()) 
+
+print(plot_tn)
+
+# Combine the plots using cowplot
+plot_temp <- plot_temp + ggtitle("A")
+plot_tp <- plot_tp + ggtitle("B")
+plot_tn <- plot_tn + ggtitle("C")
+combined_plot <- plot_grid(plot_temp, plot_tp, plot_tn, nrow = 1, align = 'v')
+
+print(combined_plot)
+
+# Adding a common legend
+legend <- get_legend(ggplot(NTL_LTER_PeterPaul_finite, aes(x = month, y = temperature_C, fill = lakename)) + 
+                      geom_boxplot() +
+                      theme(legend.position = "bottom"))
+final_plot <- plot_grid(combined_plot, legend, ncol = 1, rel_heights = c(1, 0.1))
+
+# Print the final combined plot
+print(final_plot)
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
-> Answer: 
+> Answer: The analysis of the plots reveals that neither Paul Lake nor Peter Lake consistently exhibits higher concentrations of total phosphorus or total nitrogen throughout the months from May to September. Both lakes show variability in nutrient levels, reflecting potentially diverse biogeochemical processes, watershed inputs, and management practices affecting each lake differently. Peter Lake does show higher levels from May to August but its levels are lower than Paul Lake in September. 
 
 6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
 
@@ -83,12 +242,33 @@ Question: What do you observe about the variables of interest over seasons and b
 
 ```{r Plot litter}
 #6
+needles_data <- NIWOT_ridge_litter %>%
+  filter(functionalGroup == "Needles")
 
+plot_needles <- ggplot(needles_data, aes(x = collectDate, y = dryMass, color = nlcdClass)) +
+  geom_point() +  
+  labs(title = "Dry Mass of Needle Litter by Date",
+       x = "Date",
+       y = "Dry Mass (g)",
+       color = "NLCD Class") +
+  theme_minimal() +
+  scale_color_brewer(type = 'qual')  # using a qualitative color palette for clarity
+
+print(plot_needles)
 
 #7
+plot_needles_facets <- ggplot(needles_data, aes(x = collectDate, y = dryMass)) +
+  geom_point() +  
+  labs(title = "Dry Mass of Needle Litter by Date and NLCD Class",
+       x = "Date",
+       y = "Dry Mass (g)") +
+  theme_minimal() +
+  facet_wrap(~nlcdClass , scales = "free_y")  # Facet by NLCD class with free y-axis scales
 
+# Print the plot
+print(plot_needles_facets)
 
 ```
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer:
+> Answer:Plot 7 is more effective than Plot 6 because it separates the data into different panels for each land cover type. This layout makes it easier to see and compare the specific trends and unusual data points within each category, without the confusion that overlapping data can cause in Plot 6. This clear separation in Plot 7 helps in understanding and analyzing the data better for each land type.
