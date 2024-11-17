@@ -172,6 +172,7 @@ mapview(sfc_GraingerHall)
 #Upgrade to a spatial dataframe
 sf_GraingerHall <- st_as_sf(sfc_GraingerHall)
 sf_GraingerHall$Name = 'Grainger Hall'
+
 mapview(sf_GraingerHall)
 
 ```
